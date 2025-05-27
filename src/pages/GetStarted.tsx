@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, MessageCircle, Bot, ShoppingCart, BarChart4 } from 'lucide-react';
+import { UtensilsCrossed, Hotel, Smartphone, ShoppingBag, ShieldCheck, Hammer, Truck, Flower2, Cake, BookOpen, Check } from 'lucide-react';
 import SectionHeading from '../components/ui/SectionHeading';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import { supabase } from '../lib/supabase';
 
 const GetStarted: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     businessEmail: '',
     whatsappNumber: '',
     companyName: '',
@@ -25,11 +28,36 @@ const GetStarted: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    setIsSubmitted(true);
-    window.scrollTo(0, 0);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error: signupError } = await supabase
+        .from('basic_signups')
+        .insert([
+          {
+            full_name: formData.fullName,
+            business_email: formData.businessEmail,
+            whatsapp_number: formData.whatsappNumber,
+            company_name: formData.companyName,
+            shop_url: formData.shopUrl || null,
+            industry: formData.industry,
+            country: formData.country,
+          },
+        ]);
+
+      if (signupError) throw signupError;
+
+      setIsSubmitted(true);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit form');
+      console.error('Error submitting form:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const features = {
@@ -184,14 +212,14 @@ const GetStarted: React.FC = () => {
                   
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                         Name*
                       </label>
                       <input
                         type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
+                        id="fullName"
+                        name="fullName"
+                        value={formData.fullName}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
                         placeholder="Enter Your Name"
@@ -313,8 +341,17 @@ const GetStarted: React.FC = () => {
                       <p className="mt-1 text-sm text-gray-500">Where your business operates</p>
                     </div>
 
-                    <Button type="submit" variant="primary" fullWidth>
-                      Submit
+                    {error && (
+                      <div className="text-red-500 text-sm">{error}</div>
+                    )}
+
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Submitting...' : 'Submit'}
                     </Button>
                   </form>
                 </Card>
