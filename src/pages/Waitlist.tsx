@@ -4,9 +4,12 @@ import { MessageCircle, MessageSquare, Bot, Languages, Braces, BarChart3, Check 
 import SectionHeading from '../components/ui/SectionHeading';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import { supabase } from '../lib/supabase';
 
 const Waitlist: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -39,13 +42,35 @@ const Waitlist: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit form data to backend
-    console.log('Waitlist form data submitted:', formData);
-    // Show success message
-    setIsSubmitted(true);
-    window.scrollTo(0, 0);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase
+        .from('waitlist_entries')
+        .insert([
+          {
+            full_name: formData.fullName,
+            email: formData.email,
+            phone_number: formData.phoneNumber,
+            industry: formData.industry,
+            interests: formData.interests,
+            message: formData.message,
+          },
+        ]);
+
+      if (error) throw error;
+
+      setIsSubmitted(true);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit form');
+      console.error('Error submitting form:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,6 +99,12 @@ const Waitlist: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Form or Confirmation */}
             <div>
+              {error && (
+                <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">
+                  {error}
+                </div>
+              )}
+              
               {isSubmitted ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -277,8 +308,13 @@ const Waitlist: React.FC = () => {
                         ></textarea>
                       </div>
                       
-                      <Button type="submit" variant="primary" fullWidth>
-                        Join the Waitlist
+                      <Button 
+                        type="submit" 
+                        variant="primary" 
+                        fullWidth
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Submitting...' : 'Join the Waitlist'}
                       </Button>
                     </form>
                   </div>
@@ -427,8 +463,8 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
         <span>{question}</span>
         <span className="ml-4">
           {isOpen ? (
-            <svg className="w-5 h-5 text-primary-600\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24\" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round\" strokeLinejoin="round\" strokeWidth="2\" d="M19 9l-7 7-7-7"></path>
+            <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           ) : (
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
