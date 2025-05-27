@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UtensilsCrossed, Hotel, Smartphone, ShoppingBag, ShieldCheck, Hammer, Truck, Flower2, Cake, BookOpen, Check } from 'lucide-react';
+import { Check, MessageCircle, Bot, ShoppingCart, BarChart4 } from 'lucide-react';
 import SectionHeading from '../components/ui/SectionHeading';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -213,7 +213,7 @@ const GetStarted: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                       <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                        Name*
+                        Full Name*
                       </label>
                       <input
                         type="text"
